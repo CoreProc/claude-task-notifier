@@ -5,11 +5,11 @@ import urllib.request
 from src.notifier.server import NotificationServer
 
 
-def test_server_receives_post_and_calls_callback():
+def test_server_receives_claude_hook_data():
     received = []
 
-    def on_notify(summary):
-        received.append(summary)
+    def on_notify(summary, project):
+        received.append((summary, project))
 
     server = NotificationServer(port=19876, on_notify=on_notify)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -17,7 +17,10 @@ def test_server_receives_post_and_calls_callback():
     time.sleep(0.3)
 
     try:
-        data = json.dumps({"summary": "Test task done"}).encode()
+        data = json.dumps({
+            "last_assistant_message": "Fixed the login bug",
+            "cwd": "E:\\Dev\\Projects\\my-app",
+        }).encode()
         req = urllib.request.Request(
             "http://localhost:19876",
             data=data,
@@ -27,16 +30,16 @@ def test_server_receives_post_and_calls_callback():
         urllib.request.urlopen(req)
 
         time.sleep(0.3)
-        assert received == ["Test task done"]
+        assert received == [("Fixed the login bug", "my-app")]
     finally:
         server.shutdown()
 
 
-def test_server_handles_missing_summary():
+def test_server_handles_missing_fields():
     received = []
 
-    def on_notify(summary):
-        received.append(summary)
+    def on_notify(summary, project):
+        received.append((summary, project))
 
     server = NotificationServer(port=19877, on_notify=on_notify)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -54,6 +57,6 @@ def test_server_handles_missing_summary():
         urllib.request.urlopen(req)
 
         time.sleep(0.3)
-        assert received == ["Claude Code task completed"]
+        assert received == [("Task completed", "Unknown project")]
     finally:
         server.shutdown()

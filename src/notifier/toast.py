@@ -1,9 +1,15 @@
 from datetime import datetime
-from win10toast import ToastNotifier
+from winotify import Notification
 
 
-def show_notification(summary):
+def show_notification(summary, project=""):
     timestamp = datetime.now().strftime("%H:%M:%S")
-    msg = f"{summary}\nCompleted at {timestamp}"
-    toaster = ToastNotifier()
-    toaster.show_toast(title="Claude Code", msg=msg, duration=10, threaded=True)
+    title = f"Claude Code — {project}" if project else "Claude Code"
+    msg = f"{summary}\n{timestamp}"
+    toast = Notification(
+        app_id="Claude Code Notifier",
+        title=title,
+        msg=msg,
+        duration="short",
+    )
+    toast.show()

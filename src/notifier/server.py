@@ -11,8 +11,17 @@ class _Handler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             data = {}
 
-        summary = data.get("summary", "Claude Code task completed")
-        self.server.on_notify(summary)
+        # Extract project from cwd (last directory component)
+        cwd = data.get("cwd", "")
+        project = cwd.replace("\\", "/").rstrip("/").split("/")[-1] if cwd else "Unknown project"
+
+        # Use last_assistant_message as summary, fall back to simple message
+        summary = data.get("last_assistant_message", data.get("summary", "Task completed"))
+        # Truncate long summaries to first 200 chars
+        if len(summary) > 200:
+            summary = summary[:200] + "..."
+
+        self.server.on_notify(summary, project)
 
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
