@@ -1,11 +1,9 @@
-from datetime import datetime
 from winotify import Notification
 
 
 def show_notification(summary, project=""):
-    timestamp = datetime.now().strftime("%H:%M:%S")
     title = f"Claude Code — {project}" if project else "Claude Code"
-    msg = f"{summary}\n{timestamp}"
+    msg = summary
     toast = Notification(
         app_id="Claude Code Notifier",
         title=title,
